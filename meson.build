@@ -5,8 +5,13 @@ project('libfatctl', 'cpp',
 
 add_global_arguments('-D_WIN32_WINNT=_WIN32_WINNT_WIN8', language: 'cpp') # Win8+
 
-executable(
-    'dirinfo', files('samples/dirinfo.cpp'),
+fatctl = shared_library('fatctl', files('src/dir.cpp'),
     include_directories: ['include'],
-    install: true
+    install: true,
+  )
+
+executable('dirinfo', files('samples/dirinfo.cpp'),
+    include_directories: ['include', 'src'], # playground can use nonpublic APIs
+    link_with: [fatctl],
+    install: true,
   )

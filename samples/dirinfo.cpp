@@ -7,49 +7,15 @@
 #include <windows.h>
 
 #include "fatctl/open.h"
+#include "fatdir.h"
 
 #include <assert.h>
-#include <string>
-
-namespace fatctl {
-
-constexpr const char* kLPP = "\\\\?\\";
-constexpr size_t kPSz = 4;
-
-const char* TrimLPP(const char* str) {
-    return strncmp(str, kLPP, kPSz) ? str : str + kPSz;
-}
-
-} // namespace fatctl
 
 namespace {
 
 using namespace fatctl;
 
 } // anonymous
-
-extern "C"
-{
-
-int fatctl_allcatch_open(const char* path, int mode, ...) {
-    int fd = (mode & O_DIRECTORY) ? -1 : fatctl_fallback_open(path, mode); /* parse and forward args... */
-    printf("fallback fd=%d errno=%d LastError=%lu\n", fd, errno, GetLastError());
-    if(fd<0) {
-        // iterate over various possibilities...
-        // examine whether stock `close()` works!
-        // TODO: parse `mode`
-        SetLastError(errno = 0);
-        HANDLE dir = CreateFileA(path, GENERIC_READ, FILE_SHARE_VALID_FLAGS, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
-        printf("Got a directory handle: %p -> %s\n", dir, path);
-        if(dir != INVALID_HANDLE_VALUE) {
-            fd = _open_osfhandle((intptr_t)dir, _O_RDONLY);
-            printf("Got a dirfd: %d errno=%d LastError=%lu\n", fd, errno, GetLastError());
-        }
-    }
-    return fd;
-}
-
-} // extern "C"
 
 int main(int argc, char** argv) {
 
@@ -61,25 +27,14 @@ int main(int argc, char** argv) {
     SetLastError(errno = 0);
     fd = open(kPath, O_RDONLY | O_BINARY);
     printf("wrapped open(%s) fd=%d errno=%d LastError=%lu\n", kPath, fd, errno, GetLastError());
+    assert(fd >= 0);
 
-    // reveal path name: trying GetFileInformationByHandleEx
-    struct {
-        FILE_NAME_INFO fni;
-        wchar_t xtn[MAX_PATH];
-    } pc;
     HANDLE dir = (HANDLE)_get_osfhandle(fd);
-    if(GetFileInformationByHandleEx(dir, FileNameInfo, &pc.fni, sizeof(pc))) {
-        size_t len = pc.fni.FileNameLength / sizeof(*pc.fni.FileName);
-        assert(len < MAX_PATH);
-        pc.fni.FileName[len] = L'\0';
-        printf("GetFileInformationByHandleEx(FileNameInfo): path=%ls\n", pc.fni.FileName);
-        fflush(stdout);
-    }
-    // reveal path name: trying GetFinalPathNameByHandleA (reveals drive letter)
-    char lpath[MAX_PATH];
-    if(GetFinalPathNameByHandleA(dir, &lpath[0], MAX_PATH, 0 /* flags */)) {
-        printf("GetFinalPathNameByHandle(VOLUME_NAME_DOS): path=%s\n", TrimLPP(lpath));
-    }
+    std::string with_drive = PathWithDisk(dir);
+    /* TODO: replace ASCII with UTF-8 */
+    printf("fd to path: %s\n", with_drive.c_str());
+
+    // supplement blksize
     FILE_STORAGE_INFO fsi;
     if(GetFileInformationByHandleEx(dir, FileStorageInfo, &fsi, sizeof(fsi))) {
         printf("blksize(emulated)=%lu blksize(fundamental)=%lu secsize=%lu\n",
@@ -88,6 +43,7 @@ int main(int argc, char** argv) {
             fsi.FileSystemEffectivePhysicalBytesPerSectorForAtomicity);
     }
 
+    // close dirfd
     assert(!close(fd));
 
     return 0;

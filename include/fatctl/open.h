@@ -1,5 +1,5 @@
-#ifndef _FATCTL_DIRS_H_
-#define _FATCTL_DIRS_H_
+#ifndef _FATCTL_OPEN_H
+#define _FATCTL_OPEN_H
 
 // TODO allow a different header sequence to be injected here
 #include <unistd.h>
@@ -28,7 +28,7 @@ inline int fatctl_fallback_open(const char* path, int flags, ...) {
 #endif
 #define open fatctl_allcatch_open
 
-/* BEGIN_DECLS */
+/* BEGIN_DECLS */   
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -40,4 +40,4 @@ int open(const char* path, int mode, ...);
 }
 #endif
 
-#endif /* _FATCTL_DIRS_H_ */
+#endif /* _FATCTL_OPEN_H */
