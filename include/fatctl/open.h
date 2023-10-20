@@ -1,7 +1,10 @@
-#ifndef _FATCTL_OPEN_H
-#define _FATCTL_OPEN_H
+#ifndef _FATCTL_OPEN_H_
+#define _FATCTL_OPEN_H_
 
-// TODO allow a different header sequence to be injected here
+#include "fatctl/mode.h"
+
+/* MOREINFO consider removing this import and making this file a "textual header"
+     to support alternative implementations of `open` (win32iocompat will tell) */
 #include <unistd.h>
 
 /* Overriding existing `open` API signatures with aliases while keeping overridden implementations available. */
@@ -20,9 +23,14 @@
 #endif
 #endif /* old POSIX names */
 
-inline int fatctl_fallback_open(const char* path, int flags, ...) {
-    return open(path, flags); // TODO forward variadic arguments
+inline int fatctl_fallback_open(const char* path, int flags) {
+    return open(path, flags);
 }
+
+inline int fatctl_fallback_openfm(const char* path, int flags, mode_t mode) {
+    return open(path, flags, mode);
+}
+
 #ifdef open
 #undef open
 #endif
@@ -40,4 +48,4 @@ int open(const char* path, int mode, ...);
 }
 #endif
 
-#endif /* _FATCTL_OPEN_H */
+#endif /* _FATCTL_OPEN_H_ */

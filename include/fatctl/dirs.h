@@ -9,7 +9,7 @@
 extern "C" {
 #endif
 
-DIR *fdopendir(int fd);
+DIR* fdopendir(int fd);
 
 /* END_DECLS */
 #ifdef __cplusplus

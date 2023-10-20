@@ -5,7 +5,9 @@ project('libfatctl', 'cpp',
 
 add_global_arguments('-D_WIN32_WINNT=_WIN32_WINNT_WIN8', language: 'cpp') # Win8+
 
-fatctl = shared_library('fatctl', files('src/dir.cpp'),
+subdir('src')
+
+fatctl = shared_library('fatctl', lib_implementation,
     include_directories: ['include'],
     install: true,
   )
@@ -15,3 +17,7 @@ executable('dirinfo', files('samples/dirinfo.cpp'),
     link_with: [fatctl],
     install: true,
   )
+
+subdir('include/fatctl')
+
+install_headers(public_includes, subdir: 'fatctl')

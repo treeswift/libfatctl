@@ -1,0 +1,1 @@
+public_includes = files('dirs.h', 'fdio.h', 'info.h', 'link.h', 'mode.h', 'open.h', 'wrap.h')

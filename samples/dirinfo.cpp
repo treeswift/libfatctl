@@ -2,14 +2,19 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <dirent.h>
 
-#include <stdio.h>
 #include <windows.h>
 
 #include "fatctl/open.h"
-#include "fatdir.h"
+#include "fatctl/dirs.h"
+#include "fatctl/info.h"
+#include "fatctl/wrap.h"
+#include "dir.h"
 
+#include <stdio.h>
 #include <assert.h>
+#include <string>
 
 namespace {
 
@@ -29,19 +34,24 @@ int main(int argc, char** argv) {
     printf("wrapped open(%s) -> fd=%d errno=%d LastError=%lu\n", kPath, fd, errno, GetLastError());
     assert(fd >= 0);
 
-    HANDLE dir = (HANDLE)_get_osfhandle(fd);
+    HANDLE dir = get_handle_from_posix_fd(fd);
     std::string with_drive = PathWithDisk(dir);
     /* TODO: replace ASCII with UTF-8 */
     printf("fd to path: %s\n", with_drive.c_str());
 
-    // supplement blksize
-    FILE_STORAGE_INFO fsi;
-    if(GetFileInformationByHandleEx(dir, FileStorageInfo, &fsi, sizeof(fsi))) {
-        printf("blksize(emulated)=%lu blksize(fundamental)=%lu secsize=%lu\n",
-            fsi.LogicalBytesPerSector,
-            fsi.PhysicalBytesPerSectorForAtomicity,
-            fsi.FileSystemEffectivePhysicalBytesPerSectorForAtomicity);
+    struct fatctl_fsinfo info;
+    assert(!fatctl_fsinfo_query(fd, &info));
+    printf("blksize(emulated)=%u blksize(fundamental)=%u secsize=%u\n",
+        info.blksize, info.blksize_medium, info.blksize_memory);
+
+    DIR* ditr = fdopendir(fd);
+    struct dirent* entry;
+    while(entry = readdir(ditr)) {
+        std::string name(&entry->d_name[0], &entry->d_name[entry->d_namlen]);
+        // TODO query stat, attrs
+        printf("%s\n", name.c_str());
     }
+    assert(!closedir(ditr));
 
     // close dirfd
     assert(!close(fd));
