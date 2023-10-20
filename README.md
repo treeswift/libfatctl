@@ -7,6 +7,10 @@ N gigahertz. Plug it in, include `fatctl/ctrl.h` or/or `fatctl/stat.h` and let u
 
 The library is primarily intended for the MinGW environment or other POSIX-on-Windows environments.
 
+# Status
+
+Sizzling WIP. The development is its day three.
+
 # Technical notes
 
 Build the library with [Meson](https://mesonbuild.com)/[Ninja](https://ninja-build.org)
