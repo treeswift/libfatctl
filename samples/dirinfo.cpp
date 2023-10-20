@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
 
     SetLastError(errno = 0);
     fd = open(kPath, O_RDONLY | O_BINARY);
-    printf("wrapped open(%s) fd=%d errno=%d LastError=%lu\n", kPath, fd, errno, GetLastError());
+    printf("wrapped open(%s) -> fd=%d errno=%d LastError=%lu\n", kPath, fd, errno, GetLastError());
     assert(fd >= 0);
 
     HANDLE dir = (HANDLE)_get_osfhandle(fd);
