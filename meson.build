@@ -5,6 +5,8 @@ project('libfatctl', 'cpp',
 
 add_global_arguments('-D_WIN32_WINNT=_WIN32_WINNT_WIN8', language: 'cpp') # Win8+
 
+subdir('_user') # specify e.g. debug flags in `meson.build` there
+
 subdir('src')
 
 fatctl = shared_library('fatctl', lib_implementation,
