@@ -23,7 +23,7 @@
 #endif
 #endif /* old POSIX names */
 
-inline int fatctl_fallback_open(const char* path, int flags) {
+inline int fatctl_fallback_openf(const char* path, int flags) {
     return open(path, flags);
 }
 

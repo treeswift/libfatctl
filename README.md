@@ -20,7 +20,8 @@ or use Meson to generate project files for your favorite build system.
 
 * `fatctl/mode.h` defines `mode_t` (unless already defined) and a few extra file types (ditto).
 * `fatctl/path.h` defines the `AT_*` family of constants that command special modes of relative path resolution.
-* `fatctl/open.h` redefines `open()`, exposing old definition as `fatctl_open_fallback()`. Include after `<io.h>`/`<fcntl.h>` and such.
+* `fatctl/open.h` redefines `open()`, exposing old definitions as `fatctl_fallback_openf()` and `fatctl_fallback_openfm()`.
+ Include after `<io.h>`/`<fcntl.h>` and such.
 * `fatctl/fdio.h` declares `[v]dprintf()`, which is for some odd reason missing in MinGW.
 * `fatctl/cntl.h` declares `fcntl()`;
 * `fatctl/info.h` declares library-specific filesystem property query functions, such as `fatctl_fsinfo_query()` to get the block size.
