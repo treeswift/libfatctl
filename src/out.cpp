@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include <errno.h>
 
 extern "C" {
@@ -18,10 +19,12 @@ int dprintf(int fd, const char *format, ...) {
 }
 
 int vdprintf(int fd, const char *format, va_list args) {
-    char* dyn;
+    char* dyn = nullptr;
     auto func = &__mingw_vasprintf ? &__mingw_vasprintf : &vasprintf;
     const int length = (*func)(&dyn, format, args);
-    return length >= 0 ? write(fd, dyn, length) : (errno = EINVAL, -1);
+    int retval = length >= 0 ? write(fd, dyn, length) : (errno = EINVAL, -1);
+    if(dyn) free(dyn); // yes, I know, unique_ptr blah blah blah. just keep it readable.
+    return retval;
 }
 
 } // extern "C"

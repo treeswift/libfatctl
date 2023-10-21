@@ -48,6 +48,16 @@ HANDLE get_handle_from_posix_fd(int fd) {
     return _curFd2HandleImpl(fd);
 }
 
+int fcntl(int fd, int cmd, ...) {
+    // F_GETFD, F_SETFD
+    // F_GETFL, F_SETFL
+    // F_GETLK, F_SETLK, F_SETLKW
+    // F_GETOWN, F_SETOWN
+    // F_NOTIFY
+    // F_GETPIPE_SZ, F_SETPIPE_SZ
+
+}
+
 /* END_DECLS */
 #ifdef __cplusplus
 }

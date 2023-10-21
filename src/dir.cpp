@@ -109,9 +109,15 @@ ssize_t readlink(const char *pathname, char *buf, size_t bufsz) {
     }
 }
 
-DIR* fdopendir(int fd) {
-    std::string dirpath = PathWithDisk(get_handle_from_posix_fd(fd));
+DIR* fdopendir(int dirfd) {
+    std::string dirpath = PathWithDisk(get_handle_from_posix_fd(dirfd));
     return dirpath.empty() ? errno = EINVAL, nullptr : opendir(dirpath.c_str());
 }
+
+/**
+ * Note that the Windows open file ownership model is different from *nix
+ * in such a way that ...
+ */
+
 
 } // extern "C"
