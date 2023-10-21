@@ -17,6 +17,7 @@ DIR* fdopendir(int dirfd);
 
 int openat(int dirfd, const char* relpath, int flags, ...);
 int mkdirat(int dirfd, const char* relpath, mode_t mode);
+int renameat(int dirfd, const char *relpath, int newdirfd, const char *newrelpath);
 int unlinkat(int dirfd, const char* relpath, int flags);
 
 /* END_DECLS */

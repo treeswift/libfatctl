@@ -56,6 +56,9 @@ int fcntl(int fd, int cmd, ...) {
     // F_NOTIFY
     // F_GETPIPE_SZ, F_SETPIPE_SZ
 
+    (void) fd;
+    (void)cmd;
+    return -1;
 }
 
 /* END_DECLS */

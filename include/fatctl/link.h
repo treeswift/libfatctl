@@ -17,7 +17,7 @@ ssize_t readlink(const char *path, char *buf, size_t bufsz);
 
 int lstat(const char *path, struct stat *statbuf);
 
-int linkat(int target, const char *relpath, int linkdir, const char *linkrelpath, int flags);
+int linkat(int trgfd, const char *relpath, int linkdir, const char *linkrelpath, int flags);
 int symlinkat(const char *target, int linkdir, const char *linkrelpath);
 ssize_t readlinkat(int dirfd, const char* relpath, char* buf, size_t bufsz);
 

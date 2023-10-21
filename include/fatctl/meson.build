@@ -1,5 +1,4 @@
-public_includes = files
-  (
+public_includes = files(
     'cntl.h',
     'dirs.h',
     'fdio.h',

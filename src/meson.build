@@ -1,7 +1,6 @@
-lib_implementation = files
-  (
+lib_implementation = files(
     'dir.cpp',
     'fsi.cpp',
     'osh.cpp',
-    'out.cpp'
+    'out.cpp',
   )

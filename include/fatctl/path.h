@@ -41,7 +41,7 @@
 
 /**
  * Operate on mount point rather than automounted volume.
- * (`libfatctl` is not currently aware of volume mounting)
+ * (libfatctl is not currently aware of volume mounting)
  */
 #ifndef AT_NO_AUTOMOUNT
 #define AT_NO_AUTOMOUNT     (_FATCTL_RELPATH_AT_BASE<<3)
