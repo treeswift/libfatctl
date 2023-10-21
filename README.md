@@ -40,7 +40,7 @@ thinks that it might be useful (we aren't currently sure ourselves). Link: https
 If you are using a custom compatibility layer translating `int fd` into `HANDLE` via its own look-up table,
 rather than the one provided by the CRT and used by `_get_osfhandle(int)`, give us a call: `SetFd2Handle()`
 in C++, `set_handle_from_posix_fd_func()` (w/o data) or `set_handle_from_posix_fd_hook()` (with data) in C.
-Client code can itself refer to the assigned mapping via `get_handle_from_posix_fd`.
+Client code can itself refer to the assigned mapping via `get_handle_from_posix_fd(int fd)`.
 
 _TODO: custom handle registration as fd._
 
