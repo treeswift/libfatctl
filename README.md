@@ -9,7 +9,7 @@ The library is primarily intended for the MinGW environment or other POSIX-on-Wi
 
 # Status
 
-Sizzling WIP. The development is its day three — file trees are being planted, but the volume astronomy is still a mess. Don't look up.
+Sizzling WIP. The development is in its day three — file trees are being planted, but the volume astronomy is still a mess. Don't look up.
 
 # Technical notes
 
