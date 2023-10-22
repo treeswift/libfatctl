@@ -50,5 +50,4 @@ HANDLE get_handle_from_posix_fd(int fd);
 }
 #endif
 
-
 #endif /* _FATCTL_WRAP_H_ */

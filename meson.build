@@ -4,6 +4,7 @@ project('libfatctl', 'cpp',
   )
 
 add_global_arguments('-D_WIN32_WINNT=_WIN32_WINNT_WIN8', language: 'cpp') # Win8+
+add_global_arguments('-Wno-c++17-extensions', language: 'cpp') # fs requires C++17 anyway
 
 subdir('_user') # specify e.g. debug flags in `meson.build` there
 
@@ -16,6 +17,12 @@ fatctl = shared_library('fatctl', lib_implementation,
 
 executable('dirinfo', files('samples/dirinfo.cpp'),
     include_directories: ['include', 'src'], # playground can use nonpublic APIs
+    link_with: [fatctl],
+    install: true,
+  )
+
+executable('test-atf', files('samples/dirtest.cpp'),
+    include_directories: ['include', 'src'], # ditto
     link_with: [fatctl],
     install: true,
   )

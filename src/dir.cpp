@@ -52,7 +52,8 @@ std::string PathWithDisk(HANDLE hFile) {
     // reveal path name: using GetFinalPathNameByHandleA (reveals drive letter!)
     char lpath[MAX_PATH];
     size_t len = GetFinalPathNameByHandleA(hFile, &lpath[0], MAX_PATH, 0 /* flags */);
-    return len ? std::string(TrimLPP(lpath), len) : std::string();
+    _FATCTL_LOG("handle %p -> path: %s", hFile, lpath);
+    return len ? lpath[len] = '\0', TrimLPP(lpath) : "";
 }
 
 /**
@@ -77,9 +78,11 @@ fs::path FsPathFromFd(int fd) {
 fs::path ResolveRelative(int basefd, std::string relpath, int flags) {
     fs::path navpath = {relpath};
     if(navpath.is_absolute()) {
+        _FATCTL_LOG("branch already absolute: %ls", navpath.c_str());
         return navpath;
     } else {
         fs::path abspath = FsPathFromFd(basefd) / navpath;
+        _FATCTL_LOG("new absolute path: %ls", abspath.c_str());
         if(flags & AT_SYMLINK_NOFOLLOW) {
             return abspath;
         } else {
@@ -133,15 +136,15 @@ int open(const char* path, int flags, ...) {
     // TODO: if(flags & O_NOFOLLOW) { test for symbolic link here and fail if the file is one }
     if(create) { _FATCTL_GETMODE; return fatctl_fallback_openfm(path, flags, mode); }
     int fd = isdir ? -1 : fatctl_fallback_openf(path, flags);
-    _FATCTL_LOG("fallback fd=%d errno=%d LastError=%lu\n", fd, errno, GetLastError());
+    _FATCTL_LOG("fallback fd=%d errno=%d LastError=%lu", fd, errno, GetLastError());
     if(fd<0) {
         // iterate over various file types, such as symlink, reparse point, volume etc.
         SetLastError(errno = 0);
         HANDLE dir = CreateFileA(path, GENERIC_READ, FILE_SHARE_VALID_FLAGS, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
-        _FATCTL_LOG("Got a directory handle: %p -> %s\n", dir, path);
+        _FATCTL_LOG("Got a directory handle: %p -> %s", dir, path);
         if(dir != INVALID_HANDLE_VALUE) {
             fd = _open_osfhandle((intptr_t)dir, _O_RDONLY); // FIXME!!!!! support overriding -- see TODO in wrap.h
-            _FATCTL_LOG("Got a dirfd: %d errno=%d LastError=%lu\n", fd, errno, GetLastError());
+            _FATCTL_LOG("Got a dirfd: %d errno=%d LastError=%lu", fd, errno, GetLastError());
         }
     }
     return fd;
