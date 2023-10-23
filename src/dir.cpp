@@ -83,11 +83,12 @@ fs::path ResolveRelative(int basefd, std::string relpath, int flags) {
     } else {
         fs::path abspath = FsPathFromFd(basefd) / navpath;
         _FATCTL_LOG("new absolute path: %ls", abspath.c_str());
-        if(flags & AT_SYMLINK_NOFOLLOW) {
-            return abspath;
-        } else {
-            return fs::weakly_canonical(abspath);
+        if(!(flags & AT_SYMLINK_NOFOLLOW)) {
+            abspath = fs::weakly_canonical(abspath);
+            _FATCTL_LOG("weakly canonical path: %ls", abspath.c_str());
+            errno = 0;
         }
+        return abspath;
     }
 }
 
@@ -112,8 +113,13 @@ int WithPathPair(int oldfd, std::string oldrelp, int newfd, std::string newrelp,
         auto tpath = hardlinking ? ResolveRelativeLinkTarget(oldfd, oldrelp, flags)
                                      : ResolveRelativeTarget(oldfd, oldrelp, flags);
         auto npath = ResolveRelative(newfd, newrelp, flags);
-        return op(tpath.u8string().c_str(), npath.u8string().c_str());
+        const auto ctpath = tpath.u8string();
+        const auto cnpath = npath.u8string();
+        _FATCTL_LOG("old/trg=%s", ctpath.c_str());
+        _FATCTL_LOG("new/lnk=%s", cnpath.c_str());
+        return op(ctpath.c_str(), cnpath.c_str());
     } catch(const fs::filesystem_error& fse) {
+        _FATCTL_LOG("Pair op error: %s", fse.what());
         return errno = ENOENT, -1;
     }
 }
@@ -154,6 +160,7 @@ int link(const char *target, const char *linkpath) {
     try {
         return fs::create_hard_link({target}, {linkpath}), 0;
     } catch(const fs::filesystem_error& fse) {
+        _FATCTL_LOG("hardlink error: %s", fse.what());
         return errno = EIO, -1;
     }
 }
@@ -163,6 +170,7 @@ int symlink(const char *target, const char *linkpath) {
     try {
         return fs::create_symlink({target}, {linkpath}), 0;
     } catch(const fs::filesystem_error& fse) {
+        _FATCTL_LOG("symlink error: %s", fse.what());
         return errno = EIO, -1;
     }
 }
@@ -176,6 +184,7 @@ ssize_t readlink(const char *pathname, char *buf, size_t bufsz) {
         std::strncpy(buf, trg.data(), bufsz);
         return bufsz;
     } catch(const fs::filesystem_error& fse) {
+        _FATCTL_LOG("readlink error: %s", fse.what());
         return errno = EIO, -1;
     } else {
         return errno = EINVAL, -1;
@@ -208,7 +217,11 @@ int mkdirat(int dirfd, const char* relpath, mode_t mode) {
     auto path = ResolveRelative(dirfd, relpath, 0);
     auto locpath = path.u8string();
     const char* cpath = locpath.c_str();
-    return mkdir(cpath) || chmod(cpath, mode);
+    printf("pre-mkdir errno=%d\n", errno);
+    const int mkdval = mkdir(cpath);
+    _FATCTL_LOG("mkdir(%s)=%d errno=%d", cpath, mkdval, errno);
+    _FATCTL_LOG("then chmod(%s, 0%o)", cpath, mode);
+    return mkdval < 0 ? mkdval : chmod(cpath, mode);
 }
 
 int renameat(int dirfd, const char *relpath, int newdirfd, const char *newrelpath) {

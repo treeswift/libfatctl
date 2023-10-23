@@ -29,10 +29,9 @@ using namespace sysroot;
 int main(int argc, char** argv) {
     (void) argc;
     (void) argv; /* we may want to accept the directory path to run the tests in in the future */
-    char cwd[MAX_PATH];
 
     // TODO use sysroot API to get the temp folder
-    const char* path = GetTempDir();
+    const char* path = "c:\\Rita\\Testdir"; // GetTempDir();
 
     int fd = _open(path, O_RDONLY | O_BINARY);
     printf("stock open(%s) -> fd=%d errno=%d LastError=%lu\n", path, fd, errno, GetLastError());

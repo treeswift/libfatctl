@@ -11,6 +11,8 @@ extern "C" {
 int dprintf(int fd, const char *format, ...);
 int vdprintf(int fd, const char *format, va_list args);
 
+#define fsync _commit
+
 /* END_DECLS */
 #ifdef __cplusplus
 }
