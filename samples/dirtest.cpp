@@ -103,6 +103,6 @@ int main(int argc, char** argv) {
     assert(kFourC[3] == fourcc[3]); // make sure content is the same
     assert(!close(linkfd));
 
-    fs::remove_all(tmpd);
+    // fs::remove_all(tmpd); // affects test flow. MOREINFO compiler reordering???
     return 0;
 }

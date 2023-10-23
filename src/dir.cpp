@@ -207,8 +207,10 @@ int openat(int dirfd, const char* relpath, int flags, ...) {
     const bool create = O_CREAT & flags;
     if(create) {
         _FATCTL_GETMODE;
+        _FATCTL_LOG("create(%s, %x, 0%o)", cpath, flags, mode);
         return open(cpath, flags, mode);
     } else {
+        _FATCTL_LOG("open(%s, %x)", cpath, flags);
         return open(cpath, flags);
     }
 }
@@ -220,7 +222,7 @@ int mkdirat(int dirfd, const char* relpath, mode_t mode) {
     printf("pre-mkdir errno=%d\n", errno);
     const int mkdval = mkdir(cpath);
     _FATCTL_LOG("mkdir(%s)=%d errno=%d", cpath, mkdval, errno);
-    _FATCTL_LOG("then chmod(%s, 0%o)", cpath, mode);
+    _FATCTL_LOG("now: chmod(%s, 0%o)", cpath, mode);
     return mkdval < 0 ? mkdval : chmod(cpath, mode);
 }
 
