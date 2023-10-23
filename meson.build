@@ -15,13 +15,13 @@ fatctl = shared_library('fatctl', lib_implementation,
     install: true,
   )
 
-executable('dirinfo', files('samples/dirinfo.cpp'),
+executable('dirinfo', files('samples/dirinfo.cpp', 'samples/sysroot.cpp'),
     include_directories: ['include', 'src'], # playground can use nonpublic APIs
     link_with: [fatctl],
     install: true,
   )
 
-executable('test-atf', files('samples/dirtest.cpp'),
+executable('test-atf', files('samples/dirtest.cpp', 'samples/sysroot.cpp'),
     include_directories: ['include', 'src'], # ditto
     link_with: [fatctl],
     install: true,

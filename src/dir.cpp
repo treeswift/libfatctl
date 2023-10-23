@@ -142,10 +142,9 @@ int open(const char* path, int flags, ...) {
         SetLastError(errno = 0);
         HANDLE dir = CreateFileA(path, GENERIC_READ, FILE_SHARE_VALID_FLAGS, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
         _FATCTL_LOG("Got a directory handle: %p -> %s", dir, path);
-        if(dir != INVALID_HANDLE_VALUE) {
-            fd = _open_osfhandle((intptr_t)dir, _O_RDONLY); // FIXME!!!!! support overriding -- see TODO in wrap.h
-            _FATCTL_LOG("Got a dirfd: %d errno=%d LastError=%lu", fd, errno, GetLastError());
-        }
+        if(dir == INVALID_HANDLE_VALUE) return errno = ENOENT, -1;
+        fd = _open_osfhandle((intptr_t)dir, _O_RDONLY); // FIXME!!!!! support overriding -- see TODO in wrap.h
+        _FATCTL_LOG("Got a dirfd: %d errno=%d LastError=%lu", fd, errno, GetLastError());
     }
     return fd;
 }
