@@ -9,9 +9,9 @@ namespace fatctl
 {
 
 std::string Fd2PathStr(int fd);
-
-/* fs::path ResolveRelative(int basefd, std::string relpath, int flags = 0); */
-/* fs::path ResolveRelativeTarget(int basefd, std::string relpath, int flags = 0); */
+std::string ResolveRelative(int basefd, std::string relpath, int flags = 0);
+std::string ResolveRelativeTarget(int basefd, std::string relpath, int flags = 0);
+std::string ResolveRelativeLinkTarget(int basefd, std::string relpath, int flags = 0);
 
 } // namespace fatctl
 
@@ -24,9 +24,7 @@ extern "C" {
  * to hold the returned C-string including the terminating '\0' character.
  */
 
-/* fs::path Fd2Path(int fd); */
-/* fs::path ResolveRelative(int basefd, std::string relpath, int flags = 0); */
-/* fs::path ResolveRelativeTarget(int basefd, std::string relpath, int flags = 0); */
+/* TODO same as above but in pure C */
 
 /* END_DECLS */
 #ifdef __cplusplus

@@ -42,14 +42,14 @@ namespace { using namespace fatctl; }
 
 namespace fatctl {
 
-constexpr const char* kLPP = "\\\\?\\";
-constexpr size_t kPSz = 4;
+static constexpr const char* kLPP = "\\\\?\\";
+static constexpr size_t kPSz = 4;
 
-const char* TrimLPP(const char* str) {
+static const char* TrimLPP(const char* str) {
     return strncmp(str, kLPP, kPSz) ? str : str + kPSz;
 }
 
-std::string PathWithDisk(HANDLE hFile) {
+static std::string PathWithDisk(HANDLE hFile) {
     // reveal path name: using GetFinalPathNameByHandleA (reveals drive letter!)
     char lpath[MAX_PATH];
     size_t len = GetFinalPathNameByHandleA(hFile, &lpath[0], MAX_PATH, 0 /* flags */);
@@ -76,7 +76,7 @@ fs::path Fd2Path(int fd) {
     return Fd2PathStr(fd); /* MOREINFO what is the locale in use here? */
 }
 
-fs::path ResolveRelative(int basefd, std::string relpath, int flags) {
+fs::path ResolveRelativePath(int basefd, std::string relpath, int flags) {
     fs::path navpath = {relpath};
     if(navpath.is_absolute()) {
         _FATCTL_LOG("branch already absolute: %ls", navpath.c_str());
@@ -93,29 +93,46 @@ fs::path ResolveRelative(int basefd, std::string relpath, int flags) {
     }
 }
 
-fs::path ResolveRelativeTarget(int basefd, std::string relpath, int flags) {
+fs::path ResolveRelativeTargetPath(int basefd, std::string relpath, int flags) {
     if(relpath.empty() && (flags & AT_EMPTY_PATH)) {
         return Fd2Path(basefd);
     } else {
-        return ResolveRelative(basefd, relpath, flags);
+        return ResolveRelativePath(basefd, relpath, flags);
     }
 }
 
-fs::path ResolveRelativeLinkTarget(int basefd, std::string relpath, int flags) {
+fs::path ResolveRelativeLinkTargetPath(int basefd, std::string relpath, int flags) {
     if(!(flags & AT_SYMLINK_FOLLOW)) {
         flags |= AT_SYMLINK_NOFOLLOW;
     }
-    return ResolveRelativeTarget(basefd, relpath, flags);
+    return ResolveRelativeTargetPath(basefd, relpath, flags);
+}
+
+std::string Path2StdString(const fs::path& path) {
+    // ROADMAP make locale configurable -- at least as much as MinGW/CRT expect (issue #4)
+    return path.u8string();
+}
+
+std::string ResolveRelative(int basefd, std::string relpath, int flags) {
+    return Path2StdString(ResolveRelativePath(basefd, relpath, flags));
+}
+
+std::string ResolveRelativeTarget(int basefd, std::string relpath, int flags) {
+    return Path2StdString(ResolveRelativeTargetPath(basefd, relpath, flags));
+}
+
+std::string ResolveRelativeLinkTarget(int basefd, std::string relpath, int flags) {
+    return Path2StdString(ResolveRelativeLinkTargetPath(basefd, relpath, flags));
 }
 
 int WithPathPair(int oldfd, std::string oldrelp, int newfd, std::string newrelp, int flags, 
                  std::function<int(const char*, const char*)> op, bool hardlinking = false) {
     try {
-        auto tpath = hardlinking ? ResolveRelativeLinkTarget(oldfd, oldrelp, flags)
-                                     : ResolveRelativeTarget(oldfd, oldrelp, flags);
-        auto npath = ResolveRelative(newfd, newrelp, flags);
-        const auto ctpath = tpath.u8string();
-        const auto cnpath = npath.u8string();
+        auto tpath = hardlinking ? ResolveRelativeLinkTargetPath(oldfd, oldrelp, flags)
+                                     : ResolveRelativeTargetPath(oldfd, oldrelp, flags);
+        auto npath = ResolveRelativePath(newfd, newrelp, flags);
+        const auto ctpath = Path2StdString(tpath);
+        const auto cnpath = Path2StdString(npath);
         _FATCTL_LOG("old/trg=%s", ctpath.c_str());
         _FATCTL_LOG("new/lnk=%s", cnpath.c_str());
         return op(ctpath.c_str(), cnpath.c_str());
@@ -202,8 +219,8 @@ DIR* fdopendir(int dirfd) {
 // "at" APIs
 
 int openat(int dirfd, const char* relpath, int flags, ...) {
-    auto path = ResolveRelative(dirfd, relpath, flags);
-    auto locpath = path.u8string();
+    auto path = ResolveRelativePath(dirfd, relpath, flags);
+    auto locpath = Path2StdString(path);
     const char* cpath = locpath.c_str();
     const bool create = O_CREAT & flags;
     if(create) {
@@ -217,8 +234,8 @@ int openat(int dirfd, const char* relpath, int flags, ...) {
 }
 
 int mkdirat(int dirfd, const char* relpath, mode_t mode) {
-    auto path = ResolveRelative(dirfd, relpath, 0);
-    auto locpath = path.u8string();
+    auto path = ResolveRelativePath(dirfd, relpath, 0);
+    auto locpath = Path2StdString(path);
     const char* cpath = locpath.c_str();
     printf("pre-mkdir errno=%d\n", errno);
     const int mkdval = mkdir(cpath);
@@ -232,8 +249,9 @@ int renameat(int dirfd, const char *relpath, int newdirfd, const char *newrelpat
 }
 
 int unlinkat(int dirfd, const char* relpath, int flags) {
-    auto path = ResolveRelative(dirfd, relpath, flags | AT_SYMLINK_NOFOLLOW);
-    return (flags & AT_REMOVEDIR) ? rmdir(path.u8string().c_str()) : unlink(path.u8string().c_str());
+    auto path = ResolveRelativePath(dirfd, relpath, flags | AT_SYMLINK_NOFOLLOW);
+    auto locpath = Path2StdString(path);
+    return (flags & AT_REMOVEDIR) ? rmdir(locpath.c_str()) : unlink(locpath.c_str());
 }
 
 int linkat(int trgfd, const char *relpath, int linkdir, const char *linkrelpath, int flags) {
@@ -241,20 +259,21 @@ int linkat(int trgfd, const char *relpath, int linkdir, const char *linkrelpath,
 }
 
 int symlinkat(const char *target, int linkdir, const char* linkrelpath) {
-    auto path = ResolveRelative(linkdir, linkrelpath, 0);
-    auto locpath = path.u8string();
+    auto path = ResolveRelativePath(linkdir, linkrelpath, 0);
+    auto locpath = Path2StdString(path);
     const char* linkpath = locpath.c_str();
     return symlink(target, linkpath);
 }
 
 ssize_t readlinkat(int dirfd, const char* relpath, char* buf, size_t bufsz) {
-    auto path = ResolveRelative(dirfd, relpath, AT_SYMLINK_NOFOLLOW);
-    return readlink(path.u8string().c_str(), buf, bufsz);
+    auto path = ResolveRelativePath(dirfd, relpath, AT_SYMLINK_NOFOLLOW);
+    auto locpath = Path2StdString(path);
+    return readlink(locpath.c_str(), buf, bufsz);
 }
 
 int fstatat(int dirfd, const char *relpath, struct stat* statbuf, int flags) {
-    auto path = ResolveRelative(dirfd, relpath, flags);
-    auto locpath = path.u8string();
+    auto path = ResolveRelativePath(dirfd, relpath, flags);
+    auto locpath = Path2StdString(path);
     int filefd = open(locpath.c_str(), O_RDONLY);
     int retval = fstat(filefd, statbuf);
     return close(filefd), retval;
@@ -266,8 +285,8 @@ int fchmod(int fd, mode_t mode) {
 }
 
 int fchmodat(int dirfd, const char* relpath, mode_t mode, int flags) {
-    auto path = ResolveRelative(dirfd, relpath, flags);
-    auto locpath = path.u8string();
+    auto path = ResolveRelativePath(dirfd, relpath, flags);
+    auto locpath = Path2StdString(path);
     return chmod(locpath.c_str(), mode);
 }
 

@@ -97,7 +97,7 @@ int main(int argc, char** argv) {
     printf("Now renaming %s to %s...\n", kTmpFile, kNewFile);
     assert(!renameat(folderfd, kTmpFile, folderfd, kNewFile));
 
-    printf("Now probing the equivalence between %s and %s...\n", kTmpFile, kTmpLink);
+    printf("Now probing the equivalence between %s and %s...\n", kNewFile, kTmpLink);
     int linkfd = openat(subdirfd, kTmpLink, O_RDONLY);
     lseek(linkfd, endpos, SEEK_SET);
     assert(read(linkfd, fourcc, sizeof(fourcc)));
