@@ -50,6 +50,17 @@ Client code can itself refer to the assigned mapping via `get_handle_from_posix_
 
 _TODO: custom handle registration as fd._
 
+## Known limitations
+
+* Long paths are not supported. The current expectation is that all paths fit in `MAX_PATH`.    
+ (Our primary target is [Windows RT](https://github.com/armdevvel/mxe-SHARED).)
+* As of now, there is no wide-character version of the API. Our current goal is to glue the gaps between MinGW (which
+obeys the Windows A/W convention) and [Toybox](https://landley.net/toybox) (which is, to the best of our current
+understanding, 8-bit locale-agnostic).
+At present, it means that paths with non-ASCII characters will not be handled correctly. One possible remedy may be using
+the 8.3 notation which is guranteed to be lower 7-bit ASCII; however, no solution confined within `libfatctl` will affect
+Windows C runtime APIs called by Toybox directly. Some inlined or statically linked translation layer may be necessary.
+
 # Terms and conditions
 
 ## License
