@@ -22,6 +22,11 @@
 
 #include "sysroot.h"
 
+namespace fatctl {
+/* Our ad-hoc localization */
+extern std::string Path2StdString(const fs::path& path);
+}
+
 namespace {
 
 using namespace sysroot;
@@ -97,12 +102,31 @@ int main(int argc, char** argv) {
     printf("Now renaming %s to %s...\n", kTmpFile, kNewFile);
     assert(!renameat(folderfd, kTmpFile, folderfd, kNewFile));
 
-    printf("Now probing the equivalence between %s and %s...\n", kNewFile, kTmpLink);
+    printf("Now testing the equivalence between %s and %s...\n", kNewFile, kTmpLink);
     int linkfd = openat(subdirfd, kTmpLink, O_RDONLY);
     lseek(linkfd, endpos, SEEK_SET);
     assert(read(linkfd, fourcc, sizeof(fourcc)));
     assert(kFourC[3] == fourcc[3]); // make sure content is the same
     assert(!close(linkfd));
+
+    constexpr const char* const kDirLnk = "Bookdir";
+    printf("Now creating a directory symlink...\n", kTmpFile, kNewFile);
+    fs::path trgp = tmpd / kSubdir, symp = tmpd / kDirLnk;
+    std::string loctrg = Path2StdString(trgp);
+    std::string locsym = Path2StdString(symp);
+    bool symlinked = !symlink(loctrg.c_str(), locsym.c_str());
+    assert(symlinked || EPERM == errno); /* has to be `sudo` on WinRT */
+    if(symlinked) {
+        char symtrg[MAX_PATH];
+        size_t linksz = readlink(locsym.c_str(), symtrg, MAX_PATH);
+        if(linksz < MAX_PATH) symtrg[linksz] = '\0';
+        printf("char*=%s wchar_t*=%ls\n", symtrg, symtrg);
+        assert(!strcmp(strrchr(symtrg, '\\') + 1, kSubdir));
+    } else {
+        printf("Need administrative (sudo) privileges to test symlinks.\n");
+    }
+
+    // now file symlinks and the "*at" API
 
     // fs::remove_all(tmpd); // affects test flow. MOREINFO compiler reordering???
     return 0;

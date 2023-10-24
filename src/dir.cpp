@@ -13,6 +13,9 @@
 #include "fatctl/what.h"
 
 #include <windows.h>
+#ifdef _FATCTL_USEKTM
+#include <ktmw32.h> /* {Create|Commit}Transaction */
+#endif
 #include <errno.h>
 #include <filesystem>
 #include <functional>
@@ -183,13 +186,49 @@ int link(const char *target, const char *linkpath) {
     }
 }
 
+#ifdef _FATCTL_USEKTM
+extern __declspec(dllimport) HANDLE CreateTransaction(LPSECURITY_ATTRIBUTES lpTransactionAttributes, LPGUID UOW,
+        DWORD CreateOptions, DWORD IsolationLevel, DWORD IsolationFlags, DWORD Timeout, LPWSTR Description)
+                __attribute__((weak));
+
+extern __declspec(dllimport) BOOL CommitTransaction(HANDLE TransactionHandle)
+                __attribute__((weak));
+#endif
+
 int symlink(const char *target, const char *linkpath) {
     // TODO add error codes, condition checks, etc.
     try {
-        return fs::create_symlink({target}, {linkpath}), 0;
+        fs::path trgpath = {target};
+        fs::path lnkpath = {linkpath};
+        fs::path relpath = trgpath.lexically_relative(lnkpath.parent_path());
+        if(relpath.is_relative() && !relpath.has_parent_path()) {
+            relpath = fs::path{"."} / relpath;
+        }
+        // if(fs::is_directory(trgpath)) {
+        //     fs::create_directory_symlink(relpath, lnkpath);
+        // } else {
+        //     fs::create_symlink(relpath, lnkpath);
+        // }
+        std::wstring relstr = relpath.native(), lnkstr = lnkpath.native();
+        DWORD flags = fs::is_directory(trgpath) ? SYMBOLIC_LINK_FLAG_DIRECTORY : 0;
+        bool success = CreateSymbolicLinkW(lnkstr.c_str(), relstr.c_str(), flags | SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE);
+        if(!success && ERROR_INVALID_PARAMETER == GetLastError()) {
+            success = CreateSymbolicLinkW(lnkstr.c_str(), relstr.c_str(), flags);
+        }
+#ifdef _FATCTL_USEKTM
+        if(!success && ERROR_PRIVILEGE_NOT_HELD == GetLastError()) {
+            HMODULE ktmdll = LoadLibraryA("ktmw32");
+            decltype(&CreateTransaction) create = (decltype(&CreateTransaction)) GetProcAddress(ktmdll, "CreateTransaction");
+            decltype(&CommitTransaction) commit = (decltype(&CommitTransaction)) GetProcAddress(ktmdll, "CommitTransaction");
+            HANDLE transaction = (*create)(nullptr, 0, 0, 0, 0, 5000, const_cast<wchar_t*>(lnkstr.data()));
+            success = CreateSymbolicLinkTransactedW(lnkstr.c_str(), relstr.c_str(), flags, transaction) && (*commit)(transaction);
+        }
+#endif
+        _FATCTL_LOG("symlink(%ls, %ls): LastError=%lu", relstr.c_str(), lnkstr.c_str(), GetLastError());
+        return success ? 0 : ((errno = (GetLastError() == ERROR_PRIVILEGE_NOT_HELD) ? EPERM : EIO), -1);
     } catch(const fs::filesystem_error& fse) {
-        _FATCTL_LOG("symlink error: %s", fse.what());
-        return errno = EIO, -1;
+        _FATCTL_LOG("symlink: LastError=%lu (%s)", GetLastError(), fse.what());
+        return errno = ENOENT, -1;
     }
 }
 
