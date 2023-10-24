@@ -16,6 +16,9 @@ Sizzling WIP. The development is in its day three — file trees are being plant
 Build the library with [Meson](https://mesonbuild.com)/[Ninja](https://ninja-build.org)
 or use Meson to generate project files for your favorite build system.
 
+Use the `filesystem` option to provide the namespace of `<filesystem>`. Default is `std::filesystem`.
+(This choice does not affect the public API of the library.)
+
 ## Headers
 
 * `fatctl/mode.h` defines `mode_t` (unless already defined) and a few extra file types (ditto).
