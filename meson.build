@@ -3,6 +3,7 @@ project('libfatctl', 'cpp',
     default_options : ['warning_level=3'],
   )
 
+add_global_arguments('-D_FATCTL_FSNS=' + get_option('filesystem'), language: 'cpp')
 add_global_arguments('-D_WIN32_WINNT=_WIN32_WINNT_WIN8', language: 'cpp') # Win8+
 add_global_arguments('-Wno-c++17-extensions', language: 'cpp') # fs requires C++17 anyway
 
@@ -21,7 +22,7 @@ executable('dirinfo', files('samples/dirinfo.cpp', 'samples/sysroot.cpp'),
     install: true,
   )
 
-executable('test-atf', files('samples/dirtest.cpp', 'samples/sysroot.cpp'),
+executable('test-libfatctl', files('samples/dirtest.cpp', 'samples/sysroot.cpp'),
     include_directories: ['include', 'src'], # ditto
     link_with: [fatctl],
     install: true,

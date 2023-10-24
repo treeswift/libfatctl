@@ -9,9 +9,10 @@
 #include "fatctl/open.h"
 #include "fatctl/dirs.h"
 #include "fatctl/info.h"
+#include "fatctl/what.h"
 #include "fatctl/wrap.h"
 
-#include "dir.h"
+#include "std.h"
 
 #include <stdio.h>
 #include <assert.h>
@@ -31,7 +32,7 @@ int main(int argc, char** argv) {
     (void) argv; /* we may want to accept the directory path to run the tests in in the future */
 
     // TODO use sysroot API to get the temp folder
-    const char* path = "c:\\Rita\\Testdir"; // GetTempDir();
+    const char* path = GetTempDir();
 
     int fd = _open(path, O_RDONLY | O_BINARY);
     printf("stock open(%s) -> fd=%d errno=%d LastError=%lu\n", path, fd, errno, GetLastError());
@@ -42,7 +43,7 @@ int main(int argc, char** argv) {
     printf("wrapped open(%s) -> fd=%d errno=%d LastError=%lu\n", path, fd, errno, GetLastError());
     assert(fd >= 0);
 
-    auto fullpath = PathFromFd(fd); /* with the drive letter; TODO assert(strchr(':')) */
+    auto fullpath = Fd2PathStr(fd); /* with the drive letter; TODO assert(strchr(':')) */
     /* TODO: replace ASCII with UTF-8 */
     printf("fd to path: %s\n", fullpath.c_str());
 
@@ -51,7 +52,7 @@ int main(int argc, char** argv) {
     printf("blksize(emulated)=%u blksize(fundamental)=%u secsize=%u\n",
         info.blksize, info.blksize_medium, info.blksize_memory);
 
-    printf("\n======== DIRECTORY LISTING FOR %s ========\n", fullpath.c_str());
+    printf("\ndir %s/\n", fullpath.c_str());
     DIR* ditr = fdopendir(fd);
     struct dirent* entry;
     while((entry = readdir(ditr))) {

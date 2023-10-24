@@ -31,6 +31,8 @@ or use Meson to generate project files for your favorite build system.
 * `fatctl/lock.h` declares `flock()`. It may declare other (alternative and more fine-grained) file locking APIs in the future.
 * `fatctl/poll.h` (stub) declares change notification APIs.
 * `fatctl/perm.h` (stub) declares permission-setting APIs.
+* `fatctl/wrap.h` declares (non-POSIX) API to restore file system paths from `int` file descriptors. (When using the pure C API,
+ it is the caller's responsibility to provide appropriately sized buffers (typically `char[MAX_PATH]`) or `free` returned C-strings.)
 * `fatctl/wrap.h` declares fd semantic customization APIs to use with custom POSIX compatibility layers (see below).
 
 MOREINFO: greater selectiveness MAY be implemented with per-routine `*_USESYSЕEM_*` and `*_PRIVATIZE_*` macros in case anyone

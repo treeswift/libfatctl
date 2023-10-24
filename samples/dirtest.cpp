@@ -10,8 +10,10 @@
 #include "fatctl/dirs.h"
 #include "fatctl/link.h"
 #include "fatctl/fdio.h"
+#include "fatctl/what.h"
 #include "fatctl/wrap.h"
-#include "dir.h" /* FsPathFromFd */
+
+#include "std.h"
 
 #include <stdio.h>
 #include <assert.h>
@@ -22,9 +24,8 @@
 
 namespace {
 
-namespace fs = std::__fs::filesystem; 
-using namespace fatctl;
 using namespace sysroot;
+using namespace fatctl;
 
 } // anonymous
 
@@ -35,7 +36,7 @@ int main(int argc, char** argv) {
     (void) argc;
     (void) argv;
 
-    const char* const kParent = "c:\\Rita"; // GetTempDir();
+    const char* const kParent = GetTempDir();
     constexpr const char* const kFolder = "Testdir";
     chdir(kParent);
     fs::path tmpd = {kFolder};
@@ -52,7 +53,7 @@ int main(int argc, char** argv) {
     assert(!mkdirat(parentfd, kFolder, 0777));
     printf("mkdirat errno=%d\n", errno);
     int folderfd = openat(parentfd, kFolder, O_RDONLY | O_DIRECTORY);
-    assert(fs::is_directory(FsPathFromFd(folderfd)));
+    assert(fs::is_directory(Fd2PathStr(folderfd)));
     assert(!close(parentfd));
     printf("close parent errno=%d\n", errno);
 
@@ -60,7 +61,7 @@ int main(int argc, char** argv) {
     printf("Now trying to populate %s...\n", kTmpFile);
     int outfd = openat(folderfd, kTmpFile, O_CREAT | O_TRUNC | O_RDWR, kWorld);
     assert(outfd >= 0);
-    assert(fs::is_regular_file(FsPathFromFd(outfd)));
+    assert(fs::is_regular_file(Fd2PathStr(outfd)));
     dprintf(outfd, "impossible: %dx%d=0x%x\n", 2, 2, 5);
     fsync(outfd);
     assert(0 == lseek(outfd, 0, SEEK_SET));

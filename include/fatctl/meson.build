@@ -11,5 +11,6 @@ public_includes = files(
     'perm.h',
     'poll.h',
     'stat.h',
+    'what.h',
     'wrap.h',
   )

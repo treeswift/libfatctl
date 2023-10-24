@@ -9,8 +9,8 @@
 #include "fatctl/open.h"
 #include "fatctl/dirs.h"
 #include "fatctl/stat.h"
-
-#include "dir.h" /* MOREINFO do we need these internal APIs declared? */
+#include "fatctl/perm.h"
+#include "fatctl/what.h"
 
 #include <windows.h>
 #include <errno.h>
@@ -20,6 +20,7 @@
 
 #include "fatctl/mode.h"
 
+#include "std.h"
 #include "dbg.h"
 
 /* Make sure no old code has been reused: */
@@ -37,7 +38,7 @@ static_assert(S_IFBLK != S_IFLNK);
 static_assert(S_IFBLK != S_IFSOCK);
 static_assert(S_IFLNK != S_IFSOCK);
 
-namespace { namespace fs = std::__fs::filesystem; using namespace fatctl; }
+namespace { using namespace fatctl; }
 
 namespace fatctl {
 
@@ -65,14 +66,14 @@ std::string PathWithDisk(HANDLE hFile) {
  * using numeric `fd` instead of the path string becomes a matter of mere
  * preference. We rely on the std::filesystem C++ API for path resolution.
  */
-std::string PathFromFd(int fd) {
+std::string Fd2PathStr(int fd) {
     if(AT_FDCWD == fd) { return "."; }
     return PathWithDisk(get_handle_from_posix_fd(fd));
 }
 
-fs::path FsPathFromFd(int fd) {
+fs::path Fd2Path(int fd) {
     if(AT_FDCWD == fd) { return fs::current_path(); }
-    return PathFromFd(fd); /* MOREINFO what is the locale in use here? */
+    return Fd2PathStr(fd); /* MOREINFO what is the locale in use here? */
 }
 
 fs::path ResolveRelative(int basefd, std::string relpath, int flags) {
@@ -81,7 +82,7 @@ fs::path ResolveRelative(int basefd, std::string relpath, int flags) {
         _FATCTL_LOG("branch already absolute: %ls", navpath.c_str());
         return navpath;
     } else {
-        fs::path abspath = FsPathFromFd(basefd) / navpath;
+        fs::path abspath = Fd2Path(basefd) / navpath;
         _FATCTL_LOG("new absolute path: %ls", abspath.c_str());
         if(!(flags & AT_SYMLINK_NOFOLLOW)) {
             abspath = fs::weakly_canonical(abspath);
@@ -94,7 +95,7 @@ fs::path ResolveRelative(int basefd, std::string relpath, int flags) {
 
 fs::path ResolveRelativeTarget(int basefd, std::string relpath, int flags) {
     if(relpath.empty() && (flags & AT_EMPTY_PATH)) {
-        return FsPathFromFd(basefd);
+        return Fd2Path(basefd);
     } else {
         return ResolveRelative(basefd, relpath, flags);
     }
@@ -192,7 +193,7 @@ ssize_t readlink(const char *pathname, char *buf, size_t bufsz) {
 }
 
 DIR* fdopendir(int dirfd) {
-    std::string dirpath = PathFromFd(dirfd);
+    std::string dirpath = Fd2PathStr(dirfd);
     return dirpath.empty() ? errno = EINVAL, nullptr : opendir(dirpath.c_str());
 }
 
@@ -257,6 +258,17 @@ int fstatat(int dirfd, const char *relpath, struct stat* statbuf, int flags) {
     int filefd = open(locpath.c_str(), O_RDONLY);
     int retval = fstat(filefd, statbuf);
     return close(filefd), retval;
+}
+
+int fchmod(int fd, mode_t mode) {
+    auto path = Fd2PathStr(fd);
+    return chmod(path.c_str(), mode);
+}
+
+int fchmodat(int dirfd, const char* relpath, mode_t mode, int flags) {
+    auto path = ResolveRelative(dirfd, relpath, flags);
+    auto locpath = path.u8string();
+    return chmod(locpath.c_str(), mode);
 }
 
 } // extern "C"

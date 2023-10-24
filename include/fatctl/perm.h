@@ -25,7 +25,10 @@ int faccessat(int dirfd, const char *pathname, int mode, int flags);
 
 /* ROADMAP absolute lowest priority to implement */
 
-int chmod(const char* path, mode_t mode);
+/**
+ * The Microsoft CRT defines _chmod (and its alias chmod) as:
+ *  int chmod(const char* path, int mode);
+ */
 int fchmod(int fd, mode_t mode);
 int fchmodat(int dirfd, const char* relpath, mode_t mode, int flags);
 

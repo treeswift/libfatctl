@@ -1,0 +1,2 @@
+option('filesystem', type: 'string', value: 'std::filesystem', description:
+  'Namespace of <filesystem>. Does not affect public API of libfatctl itself.')
