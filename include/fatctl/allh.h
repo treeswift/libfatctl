@@ -1,0 +1,14 @@
+#include <fatctl/cntl.h>
+#include <fatctl/dirs.h>
+#include <fatctl/fdio.h>
+#include <fatctl/info.h>
+#include <fatctl/link.h>
+#include <fatctl/lock.h>
+#include <fatctl/mode.h>
+#include <fatctl/open.h>
+#include <fatctl/path.h>
+#include <fatctl/perm.h>
+#include <fatctl/poll.h>
+#include <fatctl/stat.h>
+#include <fatctl/what.h>
+#include <fatctl/wrap.h>

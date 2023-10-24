@@ -1,4 +1,5 @@
 public_includes = files(
+    'allh.h',
     'cntl.h',
     'dirs.h',
     'fdio.h',

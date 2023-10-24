@@ -21,6 +21,10 @@ Use the `filesystem` option to provide the namespace of `<filesystem>`. Default 
 
 ## Headers
 
+* `fatctl/allh.h` is the "everything bagel" to include the entirety of `libfatctl` public API.
+
+Otherwise, build your own plate:
+
 * `fatctl/mode.h` defines `mode_t` (unless already defined) and a few extra file types (ditto).
 * `fatctl/path.h` defines the `AT_*` family of constants that command special modes of relative path resolution.
 * `fatctl/open.h` redefines `open()`, exposing old definitions as `fatctl_fallback_openf()` and `fatctl_fallback_openfm()`.
