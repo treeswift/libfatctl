@@ -194,10 +194,10 @@ int link(const char *target, const char *linkpath) {
 #ifdef _FATCTL_USEKTM
 extern __declspec(dllimport) HANDLE CreateTransaction(LPSECURITY_ATTRIBUTES lpTransactionAttributes, LPGUID UOW,
         DWORD CreateOptions, DWORD IsolationLevel, DWORD IsolationFlags, DWORD Timeout, LPWSTR Description)
-                __attribute__((weak));
+                __attribute((weak));
 
 extern __declspec(dllimport) BOOL CommitTransaction(HANDLE TransactionHandle)
-                __attribute__((weak));
+                __attribute((weak));
 #endif
 
 int symlink(const char *target, const char *linkpath) {

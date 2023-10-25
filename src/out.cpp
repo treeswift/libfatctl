@@ -14,8 +14,8 @@ extern "C" {
 /**
  * A good way to introduce a responsibility chain could be adding a few weak declarations, e.g.:
  * 
- * extern int vasprintf(char** alloc, const char* format, va_list args) __attribute__((weak));
- * extern int __mingw_vasprintf(char** alloc, const char* format, va_list args) __attribute__((weak));
+ * extern int vasprintf(char** alloc, const char* format, va_list args) __attribute((weak));
+ * extern int __mingw_vasprintf(char** alloc, const char* format, va_list args) __attribute((weak));
  * 
  * -- and then testing the function pointers for equality to null. In practice, however, &vasprintf
  * would produce something like 0x1. We could test whether the address is below the image base, but

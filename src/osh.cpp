@@ -72,7 +72,7 @@ static bool set_cloexec(int fd, bool set = true) {
          _FATCTL_LOG("get_handle_from_posix_fd(%d): invalid %p errno=%d LastError=%lu", fd, h, errno, GetLastError());
         return errno = EBADF, false;
     } else if(!SetHandleInformation(h, HANDLE_FLAG_INHERIT, newflags)) {
-         _FATCTL_LOG("SetHandleInformation(%p, %x) failed errno=%d LastError=%lu", h, newflags, errno, GetLastError());
+         _FATCTL_LOG("SetHandleInformation(%p, %lx) failed errno=%d LastError=%lu", h, newflags, errno, GetLastError());
         return errno = EPERM, false;
     }
     return true;
@@ -104,15 +104,26 @@ int fcntl(int fd, int cmd, ...) {
             // return _open_osfhandle(dh, access_flags);
 
             // ...if we could infer access_flags from an open `fd`.
-            // Unfortunately, there does not seem to be a reliable method. Back to square one:
+            // There used to be a `_pioinfo` hack, but newer versions of Windows don't support it:
+            //  see: https://github.com/oneclick/rubyinstaller2/issues/308
+            //  see also: https://github.com/perl/perl5/issues/14826
+            //  Examples of what _used_ to work can be found in STLPort:
+            //  https://cpp.hotexamples.com/examples/-/-/_pioinfo/cpp-_pioinfo-function-examples.html
+            // NOTE STLPort is mandatory-attribution license: http://www.stlport.org/doc/license.html
+            // We can link to the symbol weakly and use our own fd->flags map for a fallback;
+            //  then there are `dup`, `dup2`, but they are macros and can be redefined in `open.h`.
+            // We can use NtQueryObject to get current access flags, but not the current stream flags.
+            // Also, we can try writing 0 bytes to the stream, but again, it only reveals access mode.
+            // Unfortunately, there does not seem to be a reliable method that works in all cases.
+            // Back to square one:
             {
-                int dupfd = _dup(fd);
+                int dupfd = dup(fd);
                 return ((dupfd >= 0) && set_cloexec(dupfd)) ? dupfd : -1; // errno set internally
             }
 
         case F_DUPFD:
             /* arg is ignored */
-            return _dup(fd);
+            return dup(fd);
 
         case F_GETFD:
             /* arg is ignored */
