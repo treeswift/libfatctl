@@ -139,6 +139,22 @@ int main(int argc, char** argv) {
         if(linksz < MAX_PATH) symtrg[linksz] = '\0';
         printf("readlinkat(): char*=%s\n", symtrg);
         assert(std::string(&symtrg[0], &symtrg[linksz]) == (std::string("..\\") + kNewFile));
+
+        printf("Testing difference between stat(file) and stat(link)...\n");
+        fs::path trlp = trgp / kNewLink;
+        std::string loctrlp = Path2StdString(trlp);
+        assert(!stat(loctrfp.c_str(), &noat)); // original file
+        assert(!stat(loctrlp.c_str(), &at)); // symbolic link
+        printf("file.st_size=%lu ?= link.st_size=%lu\n", (DWORD)noat.st_size, (DWORD)at.st_size);
+        assert(!memcmp(&at, &noat, sizeof(struct stat)));
+
+        printf("Testing difference between stat(file) and lstat()...\n");
+        assert(!lstat(loctrlp.c_str(), &at));
+        printf("stat(link).st_size=%lu ?= lstat.st_size=%lu\n", (DWORD)noat.st_size, (DWORD)at.st_size);
+        printf("stat(link).st_mtime=%lld ?= lstat.st_mtime=%lld\n", noat.st_mtime, at.st_mtime);
+        assert(at.st_size == linksz); // link size == reported by readlink[at]
+        assert(at.st_size < noat.st_size); // link is smaller than target file
+
     } else {
         printf("Need administrative (sudo) privileges to test symlinks.\n");
     }

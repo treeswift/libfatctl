@@ -160,6 +160,11 @@ int open(const char* path, int flags, ...) {
     const bool create = O_CREAT & flags;
     const bool isdir = O_DIRECTORY & flags;
     if(create & isdir) return errno = EINVAL, -1;
+    if(flags & O_NOFOLLOW) {
+        if(fs::is_symlink(fs::path(path))) {
+            return errno = ELOOP, -1;
+        }
+    }
     // TODO: if(flags & O_NOFOLLOW) { test for symbolic link here and fail if the file is one }
     if(create) { _FATCTL_GETMODE; return fatctl_fallback_openfm(path, flags, mode); }
     int fd = isdir ? -1 : fatctl_fallback_openf(path, flags);
@@ -253,7 +258,24 @@ DIR* fdopendir(int dirfd) {
     return dirpath.empty() ? errno = EINVAL, nullptr : opendir(dirpath.c_str());
 }
 
-// TODO lstat
+int lstat(const char* path, struct stat* statbuf) {
+    if(!fs::is_symlink(fs::path(path))) {
+        return stat(path, statbuf);
+    }
+
+    SetLastError(errno = 0);
+    HANDLE dir = CreateFileA(path, GENERIC_READ, FILE_SHARE_VALID_FLAGS, NULL, OPEN_EXISTING, FILE_FLAG_OPEN_REPARSE_POINT, NULL);
+    _FATCTL_LOG("Got a symlink handle: %p -> %s", dir, path);
+    if(dir == INVALID_HANDLE_VALUE) return errno = ENOENT, -1;
+    int fd = _open_osfhandle((intptr_t)dir, _O_RDONLY); // FIXME!!!!! support overriding -- see TODO in wrap.h
+    _FATCTL_LOG("Got a symfd: %d errno=%d LastError=%lu", fd, errno, GetLastError());
+
+    char pathbuf[MAX_PATH];
+    size_t linksz = readlink(path, pathbuf, MAX_PATH); // size is not read from reparse point fd; fill in here
+    int retval = fstat(fd, statbuf);
+    statbuf->st_size = (decltype(statbuf->st_size)) linksz;
+    return close(fd), retval;
+}
 
 // "at" APIs
 

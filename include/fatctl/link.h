@@ -11,14 +11,14 @@
 extern "C" {
 #endif
 
-int link(const char *target, const char *linkpath);
-int symlink(const char *target, const char *linkpath);
-ssize_t readlink(const char *path, char *buf, size_t bufsz);
+int link(const char* target, const char* linkpath);
+int symlink(const char* target, const char* linkpath);
+ssize_t readlink(const char* path, char *buf, size_t bufsz);
 
-int lstat(const char *path, struct stat *statbuf);
+int lstat(const char* path, struct stat* statbuf);
 
-int linkat(int trgfd, const char *relpath, int linkdir, const char *linkrelpath, int flags);
-int symlinkat(const char *target, int linkdir, const char *linkrelpath);
+int linkat(int trgfd, const char* relpath, int linkdir, const char* linkrelpath, int flags);
+int symlinkat(const char* target, int linkdir, const char* linkrelpath);
 ssize_t readlinkat(int dirfd, const char* relpath, char* buf, size_t bufsz);
 
 /* END_DECLS */

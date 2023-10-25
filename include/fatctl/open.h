@@ -17,9 +17,20 @@
 #endif
 #endif
 
+#ifndef _O_NOFOLLOW
+#ifdef O_NOFOLLOW
+#define _O_NOFOLLOW O_NOFOLLOW
+#else
+#define _O_NOFOLLOW 0x2000000
+#endif
+#endif
+
 #if !defined(NO_OLDNAMES) || defined(_POSIX)
 #ifndef O_DIRECTORY
 #define O_DIRECTORY _O_DIRECTORY
+#endif
+#ifndef O_NOFOLLOW
+#define O_NOFOLLOW _O_NOFOLLOW
 #endif
 #endif /* old POSIX names */
 
