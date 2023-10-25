@@ -1,2 +1,4 @@
 option('filesystem', type: 'string', value: 'std::filesystem', description:
   'Namespace of <filesystem>. Does not affect public API of libfatctl itself.')
+option('queryobject', type: 'boolean', value: true, description:
+  'Allow the use of NtQueryObject (deprecated internal function) for F_GETFL.')
