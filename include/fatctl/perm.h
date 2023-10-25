@@ -21,7 +21,7 @@
 extern "C" {
 #endif
 
-int faccessat(int dirfd, const char *pathname, int mode, int flags);
+int faccessat(int dirfd, const char* pathname, int mode, int flags);
 
 /* ROADMAP absolute lowest priority to implement */
 

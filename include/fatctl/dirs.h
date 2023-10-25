@@ -13,8 +13,6 @@ extern "C" {
 
 DIR* fdopendir(int dirfd);
 
-/* MOREINFO AT_* constants to be defined here? */
-
 int openat(int dirfd, const char* relpath, int flags, ...);
 int mkdirat(int dirfd, const char* relpath, mode_t mode);
 int renameat(int dirfd, const char *relpath, int newdirfd, const char *newrelpath);

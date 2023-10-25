@@ -318,6 +318,12 @@ int fstatat(int dirfd, const char *relpath, struct stat* statbuf, int flags) {
     return close(filefd), retval;
 }
 
+int faccessat(int dirfd, const char* relpath, int mode, int flags) {
+    auto path = ResolveRelativePath(dirfd, relpath, flags);
+    auto locpath = Path2StdString(path);
+    return access(locpath.c_str(), mode);
+}
+
 int fchmod(int fd, mode_t mode) {
     auto path = Fd2PathStr(fd);
     return chmod(path.c_str(), mode);
