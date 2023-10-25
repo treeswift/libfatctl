@@ -110,7 +110,8 @@ int main(int argc, char** argv) {
     assert(!close(linkfd));
 
     constexpr const char* const kDirLnk = "Bookdir";
-    printf("Now creating a directory symlink...\n", kTmpFile, kNewFile);
+    constexpr const char* const kNewLink = "wink.txt";
+    printf("Now creating a directory symlink...\n");
     fs::path trgp = tmpd / kSubdir, symp = tmpd / kDirLnk;
     std::string loctrg = Path2StdString(trgp);
     std::string locsym = Path2StdString(symp);
@@ -120,16 +121,27 @@ int main(int argc, char** argv) {
         char symtrg[MAX_PATH];
         size_t linksz = readlink(locsym.c_str(), symtrg, MAX_PATH);
         if(linksz < MAX_PATH) symtrg[linksz] = '\0';
-        printf("char*=%s wchar_t*=%ls\n", symtrg, symtrg);
+        printf("readlink(): char*=%s\n", symtrg);
         assert(!strcmp(strrchr(symtrg, '\\') + 1, kSubdir));
+
+        printf("Now creating a file symlink...\n", kTmpFile, kNewFile);
+        fs::path trfp = tmpd / kNewFile;
+        std::string loctrfp = Path2StdString(trfp);
+        assert(!symlinkat(loctrfp.c_str(), subdirfd, kNewLink));
+        linksz = readlinkat(subdirfd, kNewLink, symtrg, MAX_PATH);
+        if(linksz < MAX_PATH) symtrg[linksz] = '\0';
+        printf("readlinkat(): char*=%s\n", symtrg);
+        assert(std::string(&symtrg[0], &symtrg[linksz]) == (std::string("..\\") + kNewFile));
     } else {
         printf("Need administrative (sudo) privileges to test symlinks.\n");
     }
 
-    // TODO: now file symlinks and `symlinkat`/`readlinkat` API
-
-    printf("Now deleting %s (unlink)...\n", kTmpLink);
+    printf("Now deleting hardlink %s (unlink)...\n", kTmpLink);
     assert(!unlinkat(subdirfd, kTmpLink, 0));
+    if(symlinked) {
+        printf("Now deleting symlink %s (unlink)...\n", kNewLink);
+        assert(!unlinkat(subdirfd, kNewLink, 0));
+    }
     close(subdirfd);
     printf("Now deleting %s (rmdir)...\n", kSubdir);
     assert(!unlinkat(folderfd, kSubdir, AT_REMOVEDIR));
