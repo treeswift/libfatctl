@@ -7,7 +7,7 @@
      to support alternative implementations of `open` (win32iocompat will tell) */
 #include <unistd.h>
 
-/* Overriding existing `open` API signatures with aliases while keeping overridden implementations available. */
+/* Extra _O_*, O_* flags to use with `open` */
 
 #ifndef _O_DIRECTORY
 #ifdef O_DIRECTORY
@@ -25,6 +25,10 @@
 #endif
 #endif
 
+#ifndef _O_CLOEXEC
+#define _O_CLOEXEC _O_NOINHERIT
+#endif
+
 #if !defined(NO_OLDNAMES) || defined(_POSIX)
 #ifndef O_DIRECTORY
 #define O_DIRECTORY _O_DIRECTORY
@@ -32,7 +36,12 @@
 #ifndef O_NOFOLLOW
 #define O_NOFOLLOW _O_NOFOLLOW
 #endif
+#ifndef O_CLOEXEC
+#define O_CLOEXEC _O_CLOEXEC
+#endif
 #endif /* old POSIX names */
+
+/* Overriding existing `open` API signatures with aliases while keeping overridden implementations available. */
 
 inline int fatctl_fallback_openf(const char* path, int flags) {
     return open(path, flags);

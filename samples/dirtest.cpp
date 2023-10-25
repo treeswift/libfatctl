@@ -10,6 +10,7 @@
 #include "fatctl/dirs.h"
 #include "fatctl/link.h"
 #include "fatctl/fdio.h"
+#include "fatctl/cntl.h"
 #include "fatctl/stat.h"
 #include "fatctl/what.h"
 #include "fatctl/wrap.h"
@@ -68,15 +69,33 @@ int main(int argc, char** argv) {
     int outfd = openat(folderfd, kTmpFile, O_CREAT | O_TRUNC | O_RDWR, kWorld);
     assert(outfd >= 0);
     assert(fs::is_regular_file(Fd2PathStr(outfd)));
+    printf("fs::is_regular file errno=%d\n", errno);
+    if(errno) {
+        printf("Note: `fs::is_*` functions pollute `errno`.\n");
+        errno = 0;
+    }
     dprintf(outfd, "impossible: %dx%d=0x%x\n", 2, 2, 5);
     fsync(outfd);
-    assert(0 == lseek(outfd, 0, SEEK_SET));
+
+    printf("Now trying to fcntl %s (F_DUPFD, F_GETFD, F_SETFD)...\n", kTmpFile);
+    int dupfd = fcntl(outfd, F_DUPFD_CLOEXEC);
+    assert(0 == fcntl(outfd, F_GETFD)); // inheritable by default
+    assert(FD_CLOEXEC == fcntl(dupfd, F_GETFD)); // non-inheritable
+    assert(!fcntl(outfd, F_SETFD, FD_CLOEXEC)); // noinherit
+    assert(!fcntl(dupfd, F_SETFD, 0)); // inherit
+    assert(FD_CLOEXEC == fcntl(outfd, F_GETFD)); // now non-inheritable
+    assert(0 == fcntl(dupfd, F_GETFD)); // now inheritable
+    // TODO a _good_ test of inheritability would actually spawn a child; for now we trust WinAPI
+    printf("fcntl() errno=%d\n", errno); errno = 0;
+
+    assert(0 == lseek(dupfd, 0, SEEK_SET));
     constexpr const char* expected = "impossible: 2x2=0x5";
     constexpr unsigned kAtMost = 20;
     char rdout[kAtMost];
-    assert(read(outfd, rdout, kAtMost) >= 0);
+    assert(read(dupfd, rdout, kAtMost) >= 0);
     assert(!strncmp(rdout, expected, strlen(expected)));
     printf("write/read errno=%d\n", errno);
+    assert(!close(dupfd));
 
     constexpr const char* const kSubdir = "Nookdir";
     printf("Now trying to create %s...\n", kSubdir);
