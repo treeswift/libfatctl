@@ -9,7 +9,8 @@ The library is primarily intended for the MinGW environment or other POSIX-on-Wi
 
 # Status
 
-Sizzling WIP. The development is in its day three — file trees are being planted, but the volume astronomy is still a mess. Don't look up.
+Sizzling WIP. The development is in its day four. Outstanding API families to implement are `fcntl` and `flock`. Also,
+`what.h` and `wrap.h` (supplementary APIs not present in *nix/POSIX but aiding Windows integration) are not yet complete.
 
 # Technical notes
 
