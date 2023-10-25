@@ -10,6 +10,7 @@
 #include "fatctl/dirs.h"
 #include "fatctl/link.h"
 #include "fatctl/fdio.h"
+#include "fatctl/stat.h"
 #include "fatctl/what.h"
 #include "fatctl/wrap.h"
 
@@ -96,6 +97,12 @@ int main(int argc, char** argv) {
     off_t endpos = lseek(outfd, 0, SEEK_END);
     assert(endpos > 0);
     assert(write(outfd, kFourC, sizeof(fourcc)));
+
+    printf("Testing fstat() and fstatat() of %s...\n", kTmpFile);
+    struct stat noat, at;
+    assert(!fstat(outfd, &noat));
+    assert(!fstatat(folderfd, kTmpFile, &at, 0));
+    assert(!memcmp(&at, &noat, sizeof(struct stat)));
     assert(!close(outfd));
 
     constexpr const char* const kNewFile = "hide.txt";
@@ -124,7 +131,7 @@ int main(int argc, char** argv) {
         printf("readlink(): char*=%s\n", symtrg);
         assert(!strcmp(strrchr(symtrg, '\\') + 1, kSubdir));
 
-        printf("Now creating a file symlink...\n", kTmpFile, kNewFile);
+        printf("Now creating a file symlink...\n");
         fs::path trfp = tmpd / kNewFile;
         std::string loctrfp = Path2StdString(trfp);
         assert(!symlinkat(loctrfp.c_str(), subdirfd, kNewLink));
