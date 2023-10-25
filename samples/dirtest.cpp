@@ -126,7 +126,13 @@ int main(int argc, char** argv) {
         printf("Need administrative (sudo) privileges to test symlinks.\n");
     }
 
-    // now file symlinks and the "*at" API
+    // TODO: now file symlinks and `symlinkat`/`readlinkat` API
+
+    printf("Now deleting %s (unlink)...\n", kTmpLink);
+    assert(!unlinkat(subdirfd, kTmpLink, 0));
+    close(subdirfd);
+    printf("Now deleting %s (rmdir)...\n", kSubdir);
+    assert(!unlinkat(folderfd, kSubdir, AT_REMOVEDIR));
 
     // fs::remove_all(tmpd); // affects test flow. MOREINFO compiler reordering???
     return 0;
