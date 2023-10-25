@@ -10,7 +10,6 @@ public_includes = files(
     'open.h',
     'path.h',
     'perm.h',
-    'poll.h',
     'stat.h',
     'what.h',
     'wrap.h',

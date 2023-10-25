@@ -21,7 +21,7 @@ Use the `filesystem` option to provide the namespace of `<filesystem>`. Default 
 
 ## Headers
 
-* `fatctl/allh.h` is the "everything bagel" to include the entirety of `libfatctl` public API.
+* `fatctl/full.h` is the "everything bagel" to include the entirety of `libfatctl` public API.
 
 Otherwise, build your own plate:
 
@@ -32,13 +32,13 @@ Otherwise, build your own plate:
 * `fatctl/fdio.h` declares `[v]dprintf()`, which is for some odd reason missing in MinGW.
 * `fatctl/cntl.h` declares `fcntl()`;
 * `fatctl/info.h` declares library-specific filesystem property query functions, such as `fatctl_fsinfo_query()` to get the block size.
-* `fatctl/link.h` declares hardlink/symlink manipulation APIs, such as `[sym]link[at]()` and `readlink[at]()`;
+* `fatctl/link.h` declares hardlink/symlink manipulation APIs, such as `[sym]link[at]()` and `readlink[at]()` (note that creating symlinks
+ requires elevation before a certain Windows 10 build — our test application is aware of that and respects EPERM);
 * `fatctl/dirs.h` declares `int dirfd`-based (`openat`/`mkdirat`/`unlinkat`) and `struct dirent*`-based APIs (`fdopendir()`);
 * `fatctl/stat.h` declares extra `stat()` routines (e.g. `fstatat()`);
 * `fatctl/lock.h` declares `flock()`. It may declare other (alternative and more fine-grained) file locking APIs in the future.
-* `fatctl/poll.h` (stub) declares change notification APIs.
-* `fatctl/perm.h` (stub) declares permission-setting APIs.
-* `fatctl/wrap.h` declares (non-POSIX) API to restore file system paths from `int` file descriptors. (When using the pure C API,
+* `fatctl/perm.h` declares permission-setting APIs.
+* `fatctl/what.h` declares (non-POSIX) API to restore file system paths from `int` file descriptors. (When using the pure C API,
  it is the caller's responsibility to provide appropriately sized buffers (typically `char[MAX_PATH]`) or `free` returned C-strings.)
 * `fatctl/wrap.h` declares fd semantic customization APIs to use with custom POSIX compatibility layers (see below).
 

@@ -8,7 +8,6 @@
 #include <fatctl/open.h>
 #include <fatctl/path.h>
 #include <fatctl/perm.h>
-#include <fatctl/poll.h>
 #include <fatctl/stat.h>
 #include <fatctl/what.h>
 #include <fatctl/wrap.h>
