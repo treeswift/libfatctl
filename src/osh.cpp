@@ -171,7 +171,7 @@ int fcntl(int fd, int cmd, ...) {
             // The trickiest part: we must either examine the HANDLE or access internal CRT structures.
             // Fortunately, Toybox does not use F_GETFL. NtQueryObject might help, both here and above.
             (void) fd;
-            return -1;
+            return errno = EINVAL, -1;
 
         case F_SETFL:
             // man fcntl: only "O_APPEND, O_ASYNC, O_DIRECT, O_NOATIME, and O_NONBLOCK" can be changed.
