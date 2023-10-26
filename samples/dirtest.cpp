@@ -105,7 +105,6 @@ int main(int argc, char** argv) {
     printf("openat errno=%d\n", errno);
 
     constexpr const char* const kTmpLink = "link.txt";
-    constexpr const char* const kSymLink = "syml.txt";
     printf("Now trying to hardlink %s as %s in %s...\n", kTmpFile, kTmpLink, kSubdir);
     assert(!linkat(folderfd, kTmpFile, subdirfd, kTmpLink, 0)); // hardlink
     printf("linkat errno=%d\n", errno);
@@ -136,7 +135,7 @@ int main(int argc, char** argv) {
     assert(!close(linkfd));
 
     constexpr const char* const kDirLnk = "Bookdir";
-    constexpr const char* const kNewLink = "wink.txt";
+    constexpr const char* const kSymLink = "syml.txt";
     printf("Now creating a directory symlink...\n");
     fs::path trgp = tmpd / kSubdir, symp = tmpd / kDirLnk;
     std::string loctrg = Path2StdString(trgp);
@@ -153,14 +152,14 @@ int main(int argc, char** argv) {
         printf("Now creating a file symlink...\n");
         fs::path trfp = tmpd / kNewFile;
         std::string loctrfp = Path2StdString(trfp);
-        assert(!symlinkat(loctrfp.c_str(), subdirfd, kNewLink));
-        linksz = readlinkat(subdirfd, kNewLink, symtrg, MAX_PATH);
+        assert(!symlinkat(loctrfp.c_str(), subdirfd, kSymLink));
+        linksz = readlinkat(subdirfd, kSymLink, symtrg, MAX_PATH);
         if(linksz < MAX_PATH) symtrg[linksz] = '\0';
         printf("readlinkat(): char*=%s\n", symtrg);
         assert(std::string(&symtrg[0], &symtrg[linksz]) == (std::string("..\\") + kNewFile));
 
         printf("Testing difference between stat(file) and stat(link)...\n");
-        fs::path trlp = trgp / kNewLink;
+        fs::path trlp = trgp / kSymLink;
         std::string loctrlp = Path2StdString(trlp);
         assert(!stat(loctrfp.c_str(), &noat)); // original file
         assert(!stat(loctrlp.c_str(), &at)); // symbolic link
@@ -181,8 +180,8 @@ int main(int argc, char** argv) {
     printf("Now deleting hardlink %s (unlink)...\n", kTmpLink);
     assert(!unlinkat(subdirfd, kTmpLink, 0));
     if(symlinked) {
-        printf("Now deleting symlink %s (unlink)...\n", kNewLink);
-        assert(!unlinkat(subdirfd, kNewLink, 0));
+        printf("Now deleting symlink %s (unlink)...\n", kSymLink);
+        assert(!unlinkat(subdirfd, kSymLink, 0));
     }
     close(subdirfd);
     printf("Now deleting %s (rmdir)...\n", kSubdir);
