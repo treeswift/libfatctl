@@ -31,20 +31,28 @@ Otherwise, build your own plate:
 * `fatctl/open.h` redefines `open()`, exposing old definitions as `fatctl_fallback_openf()` and `fatctl_fallback_openfm()`.
  Include after `<io.h>`/`<fcntl.h>` and such.
 * `fatctl/fdio.h` declares `[v]dprintf()`, which is for some odd reason missing in MinGW.
-* `fatctl/cntl.h` declares `fcntl()`;
+* `fatctl/cntl.h` declares `fcntl()`.
 * `fatctl/info.h` declares library-specific filesystem property query functions, such as `fatctl_fsinfo_query()` to get the block size.
 * `fatctl/link.h` declares hardlink/symlink manipulation APIs, such as `[sym]link[at]()` and `readlink[at]()` (note that creating symlinks
  requires elevation before a certain Windows 10 build — our test application is aware of that and respects EPERM);
-* `fatctl/dirs.h` declares `int dirfd`-based (`openat`/`mkdirat`/`unlinkat`) and `struct dirent*`-based APIs (`fdopendir()`);
+* `fatctl/dirs.h` declares `int dirfd`-based (`openat`/`mkdirat`/`unlinkat`) and `struct dirent*`-based APIs (`fdopendir()`).
 * `fatctl/stat.h` declares extra `stat()` routines (e.g. `fstatat()`);
-* `fatctl/lock.h` declares `flock()`. It may declare other (alternative and more fine-grained) file locking APIs in the future.
-* `fatctl/perm.h` declares permission-setting APIs.
+* `fatctl/lock.h` declares `struct flock` (for use with `fcntl()`) and optionally `flock()` (emulation with full-range locks).
+* `fatctl/perm.h` declares permission-setting and permission-querying APIs (`*access*()`, `*chmod*()`).
 * `fatctl/what.h` declares (non-POSIX) API to restore file system paths from `int` file descriptors. (When using the pure C API,
  it is the caller's responsibility to provide appropriately sized buffers (typically `char[MAX_PATH]`) or `free` returned C-strings.)
 * `fatctl/wrap.h` declares fd semantic customization APIs to use with custom POSIX compatibility layers (see below).
 
-MOREINFO: greater selectiveness MAY be implemented with per-routine `*_USESYSЕEM_*` and `*_PRIVATIZE_*` macros in case anyone
+MOREINFO: greater selectiveness MAY be implemented with per-routine `*_USESYSTEM_*` and `*_PRIVATIZE_*` macros in case anyone
 thinks that it might be useful (we aren't currently sure ourselves). Link: https://github.com/treeswift/libfatctl/issues/2
+
+## Build options
+
+(TODO add table)
+
+* `filesystem`
+* `usentquery`
+* `fcntlflock`
 
 ## Custom fd semantic
 
@@ -63,7 +71,7 @@ other reasons) best to make both assignments only once, early in application ini
 
 ## Known limitations
 
-* Long paths are not supported. The current expectation is that all paths fit in `MAX_PATH`.    
+* Long paths are not supported. The current expectation is that all paths fit in `MAX_PATH`.
  (Our primary target is [Windows RT](https://github.com/armdevvel/mxe-SHARED).)
 * As of now, there is no wide-character version of the API. Our current goal is to glue the gaps between MinGW (which
 obeys the Windows A/W convention) and [Toybox](https://landley.net/toybox) (which is, to the best of our current
