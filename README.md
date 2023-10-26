@@ -51,9 +51,15 @@ thinks that it might be useful (we aren't currently sure ourselves). Link: https
 If you are using a custom compatibility layer translating `int fd` into `HANDLE` via its own look-up table,
 rather than the one provided by the CRT and used by `_get_osfhandle(int)`, give us a call: `SetFd2Handle()`
 in C++, `set_handle_from_posix_fd_func()` (w/o data) or `set_handle_from_posix_fd_hook()` (with data) in C.
-Client code can itself refer to the assigned mapping via `get_handle_from_posix_fd(int fd)`.
+Client code can itself refer to the current mapping via `get_handle_from_posix_fd(int fd)`.
 
-_TODO: custom handle registration as fd._
+Customization of `_get_osfhandle(int)` requires a converse customization of `_open_osfhandle(HANDLE,int)`.
+The corresponding methods are `SetHandle2Fd()` in C++ and `set_posix_fd_from_handle_func()` (without data)
+or `set_posix_fd_from_handle_hook()` (with data) in C; the `HANDLE` registration itself is accomplished by
+calling `wrap_handle_as_posix_fd()`.
+
+No locks guard the assignments, and no atomicity is guaranteed in general. It is therefore (as well as for
+other reasons) best to make both assignments only once, early in application initialization code.
 
 ## Known limitations
 
