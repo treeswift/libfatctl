@@ -10,6 +10,7 @@ if get_option('queryobject')
   add_global_arguments('-D_FATCTL_NTQUERYOBJECT=1', language: 'cpp') # NtQueryObject
   # ... and link to -lntdll (we do so implicitly)
 endif
+add_global_arguments('-Wno-gnu-zero-variadic-macro-arguments', language: 'cpp') ##__VA_ARGS__
 
 subdir('_user') # specify e.g. debug flags in `meson.build` there
 
