@@ -15,12 +15,16 @@ namespace fatctl {
 // Global data. No thread safety here at all. AT ALL. Period.
 // All custom logic here must be confined to program startup.
 
-/* Default implementation. */
+/* Default implementations */
 HANDLE GetOSFHandle(int fd) { return (HANDLE)_get_osfhandle(fd); }
+int OpenHandleFd(HANDLE h, int flags) { return _open_osfhandle((intptr_t)h, flags); }
+
 handle_from_posix_fd_func const kDefFd2HandleFunc = &GetOSFHandle;
+posix_fd_from_handle_func const kDefHandle2FdFunc = &OpenHandleFd;
 
 /* Global state. */
 static Fd2HANDLE _curFd2HandleImpl = DefFd2Handle();
+static HANDLE2Fd _curHandle2FdImpl = DefHandle2Fd();
 
 void SetFd2Handle(Fd2HANDLE delegate) {
     _curFd2HandleImpl = delegate;
@@ -28,6 +32,14 @@ void SetFd2Handle(Fd2HANDLE delegate) {
 
 Fd2HANDLE DefFd2Handle() {
     return kDefFd2HandleFunc;
+}
+
+void SetHandle2Fd(HANDLE2Fd delegate) {
+    _curHandle2FdImpl = delegate;
+}
+
+HANDLE2Fd DefHandle2Fd() {
+    return kDefHandle2FdFunc;
 }
 
 } // namespace fatctl
@@ -44,16 +56,33 @@ handle_from_posix_fd_func def_handle_from_posix_fd_func() {
 }
 
 int set_handle_from_posix_fd_func(handle_from_posix_fd_func func) {
-    return func ? SetFd2Handle(func), 0 : (errno = EINVAL), -1;
+    return func ? SetFd2Handle(func), 0 : (errno = EINVAL, -1);
 }
 
 int set_handle_from_posix_fd_hook(handle_from_posix_fd_hook hook, void * hint) {
-    return hook ? SetFd2Handle([=](int fd){ return hook(fd, hint); }), 0 : (errno = EINVAL), -1;
+    return hook ? SetFd2Handle([=](int fd){ return hook(fd, hint); }), 0 : (errno = EINVAL, -1);
 }
 
 HANDLE get_handle_from_posix_fd(int fd) {
     return _curFd2HandleImpl(fd);
 }
+
+int set_posix_fd_from_handle_func(posix_fd_from_handle_func func) {
+    return func ? SetHandle2Fd(func), 0 : (errno = EINVAL, -1);
+}
+
+posix_fd_from_handle_func def_posix_fd_from_handle_func() {
+    return kDefHandle2FdFunc;
+}
+
+int set_posix_fd_from_handle_hook(posix_fd_from_handle_hook hook, void* hint) {
+    return hook ? SetHandle2Fd([=](HANDLE h, int flags){ return hook(h, flags, hint); }), 0 : (errno = EINVAL, -1);
+}
+
+int wrap_handle_as_posix_fd(HANDLE h, int flags) {
+    return _curHandle2FdImpl(h, flags);
+}
+
 
 static bool is_cloexec(int fd) {
     HANDLE h = get_handle_from_posix_fd(fd);
@@ -82,6 +111,9 @@ static bool set_cloexec(int fd, bool set = true) {
 NTSTATUS NTAPI
 NtQueryObject(HANDLE Handle,OBJECT_INFORMATION_CLASS ObjectInformationClass,
         PVOID ObjectInformation,ULONG ObjectInformationLength,PULONG ReturnLength) __attribute__((weak));
+
+// ALSO: see NtQueryInformationFile 
+// https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntqueryinformationfile
 #endif
 
 #define _FATCTL_GETARG _FATCTL_BITE(cmd, int, arg)
@@ -101,7 +133,7 @@ int fcntl(int fd, int cmd, ...) {
             //         FALSE /* inheritHandle */, DUPLICATE_SAME_ACCESS)) {
             //     return errno = BADF, -1;
             // }
-            // return _open_osfhandle(dh, access_flags);
+            // return wrap_handle_as_posix_fd(dh, access_flags);
 
             // ...if we could infer access_flags from an open `fd`.
             // There used to be a `_pioinfo` hack, but newer versions of Windows don't support it:

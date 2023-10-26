@@ -175,7 +175,7 @@ int open(const char* path, int flags, ...) {
         HANDLE dir = CreateFileA(path, GENERIC_READ, FILE_SHARE_VALID_FLAGS, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
         _FATCTL_LOG("Got a directory handle: %p -> %s", dir, path);
         if(dir == INVALID_HANDLE_VALUE) return errno = ENOENT, -1;
-        fd = _open_osfhandle((intptr_t)dir, _O_RDONLY); // FIXME!!!!! support overriding -- see TODO in wrap.h
+        fd = wrap_handle_as_posix_fd(dir, _O_RDONLY);
         _FATCTL_LOG("Got a dirfd: %d errno=%d LastError=%lu", fd, errno, GetLastError());
     }
     return fd;
@@ -264,10 +264,10 @@ int lstat(const char* path, struct stat* statbuf) {
     }
 
     SetLastError(errno = 0);
-    HANDLE dir = CreateFileA(path, GENERIC_READ, FILE_SHARE_VALID_FLAGS, NULL, OPEN_EXISTING, FILE_FLAG_OPEN_REPARSE_POINT, NULL);
-    _FATCTL_LOG("Got a symlink handle: %p -> %s", dir, path);
-    if(dir == INVALID_HANDLE_VALUE) return errno = ENOENT, -1;
-    int fd = _open_osfhandle((intptr_t)dir, _O_RDONLY); // FIXME!!!!! support overriding -- see TODO in wrap.h
+    HANDLE h = CreateFileA(path, GENERIC_READ, FILE_SHARE_VALID_FLAGS, NULL, OPEN_EXISTING, FILE_FLAG_OPEN_REPARSE_POINT, NULL);
+    _FATCTL_LOG("Got a symlink handle: %p -> %s", h, path);
+    if(h == INVALID_HANDLE_VALUE) return errno = ENOENT, -1;
+    int fd = wrap_handle_as_posix_fd(h, _O_RDONLY);
     _FATCTL_LOG("Got a symfd: %d errno=%d LastError=%lu", fd, errno, GetLastError());
 
     char pathbuf[MAX_PATH];
