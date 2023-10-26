@@ -53,16 +53,16 @@ The project exposes the following "production" build options:
 Meson option|Type|Compiler macro|Effect|Default
 ---|---|---|---|---
 `filesystem`|string|`_FATCTL_FSNS`|Namespace of `<filesystem>`|`std::filesystem`
-`usentquery`|flag|`_FATCTL_NTQUERY`|Use `NtQuery*` functions to provide `FD_GETFL`*|true/1|
-`fcntlflock`|flag|`_FATCTL_EMUFLOCK`|`flock()` emulation with `fcntl()` locks**|false/undefined|
+`usentquery`|flag|`_FATCTL_NTQUERY`|Use `NtQuery*` functions to provide `FD_GETFL`^|true/1|
+`fcntlflock`|flag|`_FATCTL_EMUFLOCK`|`flock()` emulation with `fcntl()` locks^^|false/undefined|
 
- _*_ The only viable alternative would be to wrap `open*()` and `dup*()` requests, redefining or macroizing all API flavors
+ ^ The only viable alternative would be to wrap `open*()` and `dup*()` requests, redefining or macroizing all API flavors
 and aliases that allocate an `fd`. (`libfatctl` already redefines `open`, but not `dup*`; it also wraps `_open_osfhandle()`
 but does not try to intercept direct invocations of it.) Such a solution would be runtime-kosher but extremely fragile at
 compile time; as of now, we don't even try, and `fcntl(fd, F_GETFL)` simply returns `errno=EINVAL, -1`. Please file a bug /
 feature request if the Windows version you are targeting misses those functions or if your code cannot link to `ntdll.dll`.
 
- _**_ WinAPI `LockFile*` functionality is range-based, as are `fcntl()` locks. There is no file-based API similar to `flock()`
+ ^^ WinAPI `LockFile*` functionality is range-based, as are `fcntl()` locks. There is no file-based API similar to `flock()`
 other than `dwShareMode` flags specified when the file is opened. Emulating `flock()` with `fcntl()` breaks both the strict
 API contract and the common Linux assumption the the two locking APIs are independent; however, POSIX requirements are more
 relaxed in this respect. (Toybox, our reference client component, does not use `F_GETFL`.)
