@@ -110,7 +110,7 @@ static bool set_cloexec(int fd, bool set = true) {
 #ifdef _FATCTL_NTQUERYOBJECT
 NTSTATUS NTAPI
 NtQueryObject(HANDLE Handle,OBJECT_INFORMATION_CLASS ObjectInformationClass,
-        PVOID ObjectInformation,ULONG ObjectInformationLength,PULONG ReturnLength) __attribute__((weak));
+        PVOID ObjectInformation,ULONG ObjectInformationLength,PULONG ReturnLength) __attribute((weak));
 
 // ALSO: see NtQueryInformationFile 
 // https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntqueryinformationfile
