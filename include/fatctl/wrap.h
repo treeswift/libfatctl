@@ -3,7 +3,7 @@
 
 #include <windows.h>
 
-/* BEGIN_DECLS */   
+/* BEGIN_DECLS */
 #ifdef __cplusplus
 
 #include <functional>

@@ -46,7 +46,7 @@ HANDLE2Fd DefHandle2Fd() {
 
 namespace { using namespace fatctl; }
 
-/* BEGIN_DECLS */   
+/* BEGIN_DECLS */
 #ifdef __cplusplus
 extern "C" {
 #endif

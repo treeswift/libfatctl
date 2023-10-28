@@ -7,7 +7,7 @@
 #endif /* stat */
 #include "fatctl/path.h"
 
-/* BEGIN_DECLS */   
+/* BEGIN_DECLS */
 #ifdef __cplusplus
 extern "C" {
 #endif

@@ -3,7 +3,7 @@
 
 #include <stdarg.h>
 
-/* BEGIN_DECLS */   
+/* BEGIN_DECLS */
 #ifdef __cplusplus
 extern "C" {
 #endif

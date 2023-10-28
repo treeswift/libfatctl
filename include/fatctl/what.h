@@ -1,7 +1,7 @@
 #ifndef _FATCTL_WHAT_H_
 #define _FATCTL_WHAT_H_
 
-/* BEGIN_DECLS */   
+/* BEGIN_DECLS */
 #ifdef __cplusplus
 #include <string>
 

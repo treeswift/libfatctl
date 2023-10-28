@@ -56,7 +56,7 @@ inline int fatctl_fallback_openfm(const char* path, int flags, mode_t mode) {
 #endif
 #define open fatctl_allcatch_open
 
-/* BEGIN_DECLS */   
+/* BEGIN_DECLS */
 #ifdef __cplusplus
 extern "C" {
 #endif

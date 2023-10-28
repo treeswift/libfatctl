@@ -2,9 +2,10 @@
 #define _FATCTL_LOCK_H_
 
 #include "fatctl/cntl.h"
-#include <fnctl.h>
+#include <sys/types.h>
+#include <fcntl.h>
 
-/* BEGIN_DECLS */   
+/* BEGIN_DECLS */
 #ifdef __cplusplus
 extern "C" {
 #endif

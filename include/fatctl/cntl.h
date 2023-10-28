@@ -1,7 +1,7 @@
 #ifndef _FATCTL_CNTL_H_
 #define _FATCTL_CNTL_H_
 
-/* BEGIN_DECLS */   
+/* BEGIN_DECLS */
 #ifdef __cplusplus
 extern "C" {
 #endif
